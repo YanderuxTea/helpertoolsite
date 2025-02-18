@@ -1,0 +1,417 @@
+@font-face {
+    font-family: 'Monocraft';
+    src: url('Fonts/Monocraft.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Monocraft', monospace;
+    background: #1a1a1a;
+    color: white;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+.logo {
+    color: white;
+    font-size: 1.8rem;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+    text-shadow: 0 0 10px rgba(104, 0, 145, 0.5);
+    animation: glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 5px rgba(104, 0, 145, 0.5),
+            0 0 10px rgba(104, 0, 145, 0.5),
+            0 0 15px rgba(104, 0, 145, 0.5),
+            0 0 20px rgba(104, 0, 145, 0.5);
+    }
+
+    to {
+        text-shadow: 0 0 10px rgba(104, 0, 145, 1),
+            0 0 20px rgba(104, 0, 145, 1),
+            0 0 30px rgba(104, 0, 145, 1),
+            0 0 40px rgba(104, 0, 145, 1);
+    }
+}
+
+
+.logo:hover {
+    opacity: 0.8;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.nav-btn {
+    background: rgba(104, 0, 145, 0.7);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 2rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.nav-btn:hover {
+    background: rgba(104, 0, 145, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(104, 0, 145, 0.4);
+}
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.auth-form {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 3rem;
+    border-radius: 1.5rem;
+    width: 100%;
+    max-width: 500px;
+    backdrop-filter: blur(10px);
+    animation: formAppear 0.5s ease-out;
+}
+
+@keyframes formAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    text-shadow: 0 0 10px rgba(104, 0, 145, 0.5);
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(104, 0, 145, 0.5);
+    border-radius: 0.8rem;
+    color: white;
+    font-family: 'Monocraft';
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #680091;
+    box-shadow: 0 0 15px rgba(104, 0, 145, 0.5);
+}
+
+.form-btn {
+    font-family: 'Monocraft', monospace;
+    width: 100%;
+    padding: 1rem;
+    background: rgba(104, 0, 145, 0.7);
+    color: white;
+    border: none;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-btn:hover {
+    background: #680091;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(104, 0, 145, 0.4);
+}
+
+.code-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.code-input-group .form-input {
+    flex: 1;
+}
+
+.code-btn {
+    font-family: 'Monocraft', monospace;
+    padding: 0.8rem 1.5rem;
+    height: 52px;
+    background: rgba(104, 0, 145, 0.7);
+    color: white;
+    border: none;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.code-btn:hover {
+    background: #680091;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .main-header {
+        padding: 1rem;
+    }
+
+    .logo {
+        font-size: 1.4rem;
+    }
+
+    .nav-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .auth-form {
+        padding: 2rem;
+    }
+}
+
+body {
+    font-family: 'Monocraft', monospace;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #1a1a1a;
+    cursor: default;
+    overflow: hidden;
+}
+
+.glow-text {
+    color: #ffffff;
+    font-size: 4rem;
+    animation: glow 1s ease-in-out infinite alternate;
+    user-select: none;
+    z-index: 2;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 2px #680091,
+            0 0 4px #680091,
+            0 0 6px #70004f,
+            0 0 8px #70004f;
+    }
+
+    to {
+        text-shadow: 0 0 4px #680091,
+            0 0 8px #680091,
+            0 0 12px #70004f,
+            0 0 16px #70004f;
+    }
+}
+
+.background-particle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    opacity: 0;
+    pointer-events: none;
+    animation: blockFlow 2s linear forwards;
+    z-index: 1;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+@keyframes blockFlow {
+    0% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(3) rotate(360deg);
+    }
+}
+
+.pixel-green {
+    background: #5B8C3A;
+}
+
+.pixel-brown {
+    background: #8B4513;
+}
+
+.pixel-stone {
+    background: #808080;
+}
+
+.pixel-red {
+    background: #B02E26;
+}
+
+.pixel-blue {
+    background: #3C44AA;
+}
+
+select.form-input option[disabled] {
+    display: none !important;
+}
+select.form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 3rem;
+    background: rgba(255, 255, 255, 0.1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23680091'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 16px;
+    transition: all 0.3s ease;
+}
+
+select.form-input:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23680091'%3E%3Cpath d='M7 14l5-5 5 5z'/%3E%3C/svg%3E");
+}
+
+select.form-input option {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #680091;
+}
+
+.error-message {
+    color: #ff0066;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    text-shadow: 0 0 8px rgba(255, 0, 102, 0.4);
+}
+
+.notification {
+    position: fixed;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem 2rem;
+    border-radius: 0.8rem;
+    font-family: 'Monocraft';
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+}
+
+.notification.show {
+    top: 20px;
+    opacity: 1;
+}
+
+.notification.success {
+    background: rgba(76, 175, 80, 0.9);
+    border: 2px solid #4CAF50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
+.notification.error {
+    background: rgba(244, 67, 54, 0.9);
+    border: 2px solid #F44336;
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+}
+
+.notification.warning {
+    background: rgba(255, 193, 7, 0.9);
+    border: 2px solid #FFC107;
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+}
+
+.dropbtn {
+    background-color: rgba(104, 0, 145, 0.7);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 2rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    font-family: 'Monocraft', monospace;
+}
+
+.dropbtn:hover,
+.dropbtn:focus {
+    background-color: rgba(104, 0, 145, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(104, 0, 145, 0.4);
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #1a1a1a;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    right: 0;
+    border-radius: 0.5rem;
+}
+
+.dropdown-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s;
+    border-bottom: 1px solid #680091;
+    font-family: 'Monocraft', monospace;
+}
+
+.dropdown-content a:last-child {
+    border-bottom: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.dropdown-content a:hover {
+    background-color: #680091;
+    border-radius: 0.5rem;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
