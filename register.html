@@ -8,8 +8,11 @@
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
+<div class="preloader">
+    <div class="pixel-spinner"></div>
+  </div>
     <header class="main-header">
-        <a href="index.html" class="logo">HelperTool</a>
+        <a href="index.html" class="logo glitch" data-text="HelperTool">HelperTool</a>
         <nav class="nav-links">
             <a href="register.html" class="nav-btn">Регистрация</a>
             <a href="login.html" class="nav-btn">Войти</a>
@@ -24,12 +27,15 @@
             <select class="form-input" id="kurator-select" required>
                 <option value="" disabled selected hidden>Выбери своего куратора</option>
             </select>
+            
             <input type="text" id="telegramId" placeholder="Цифры от бота" class="form-input">
-            <div class="code-input-group">
+            
+            <div class="code-input-group" style="margin-top: 1rem;">
                 <input type="text" id="code" placeholder="Код подтверждения" class="form-input">
                 <button type="button" class="code-btn">Получить код</button>
             </div>
             <button type="submit" class="form-btn">Зарегистрироваться</button>
+            <p class="bot-info">Получить цифры от <a href="https://t.me/CristalixTeaBot" target="_blank" class="bot-link">бота</a></p>
         </form>
     </div>
 
