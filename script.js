@@ -159,26 +159,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                             credentials: 'include'
                         })
                         .then(response => response.json())
-                        .then(data => {
+                        .then(async data => {  // Добавляем async, если нужен await
+                            if (!response.ok) {
+                                showNotification(data.error || 'Ошибка входа', 'error');
+                                return; // Важно! Прерываем выполнение, если есть ошибка
+                            }
+                        
                             document.cookie = `authToken=${data.token}; Secure; SameSite=Strict; max-age=86400; path=/`;
-                            // Остальная логика
+                        
+                        
+                            const userData = await verifyToken(data.token);  // Обратите внимание на await
+                            updateHeader(userData.nickname, userData.role);
+                        
+                            showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
+                            loginForm.reset();
+                            window.location.href = "index.html";
                         });
-
-                        const data = await response.json();
-
-                        if (!response.ok) {
-                            showNotification(data.error || 'Ошибка входа', 'error');
-                            return;
-                        }
-
-                        localStorage.setItem('authToken', data.token);
-
-                        const userData = await verifyToken(data.token);
-                        updateHeader(userData.nickname, userData.role);
-
-                        showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
-                        loginForm.reset();
-                        window.location.href = "index.html";
+                        
 
                     } catch (error) {
                         showNotification('Ошибка соединения', 'error');
