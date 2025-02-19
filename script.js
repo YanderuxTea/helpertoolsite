@@ -15,7 +15,11 @@ function createSymbol() {
     document.body.appendChild(particle);
     setTimeout(() => particle.remove(), 2000);
 }
-
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
 function showNotification(text, type) {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -40,29 +44,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!token) {
                 return null;
             }
-
+        
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                        'Content-Type': 'application/json'
+                    }
                 });
-
+        
                 const data = await response.json();
-
+        
                 if (!response.ok) {
                     throw new Error(data.error || 'Invalid token');
                 }
-
+        
                 return data;
-
+        
             } catch (error) {
                 console.error("Token verification failed:", error);
                 return null;
             }
         }
+        
 
         function updateHeader(nickname, role) {
             const navLinks = document.querySelector('.nav-links');
@@ -87,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function logout() {
-            localStorage.removeItem('authToken');
+            document.cookie = 'authToken=; Secure; SameSite=Strict; max-age=0; path=/';
             updateHeaderButtons();
             showNotification('Вы вышли из аккаунта', 'success');
         }
@@ -101,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const currentPage = window.location.pathname;
 
-        const storedToken = localStorage.getItem('authToken');
+        const storedToken = getCookie('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -147,10 +152,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
 
                     try {
-                        const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
+                        fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ nickname, password })
+                            body: JSON.stringify({ nickname, password }),
+                            credentials: 'include'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            document.cookie = `authToken=${data.token}; Secure; SameSite=Strict; max-age=86400; path=/`;
+                            // Остальная логика
                         });
 
                         const data = await response.json();
@@ -211,7 +222,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(formData)
+                                body: JSON.stringify(formData),
+                                credentials: 'include'
                             }
                         );
 
@@ -291,7 +303,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/check-telegram', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ telegramId })
+                        body: JSON.stringify({ telegramId }),
+                        credentials: 'include'
                     });
 
                     const result = await response.json();
