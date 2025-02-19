@@ -1,4 +1,3 @@
-
 const preloader = document.querySelector('.preloader');
 
 function createSymbol() {
@@ -34,27 +33,10 @@ function showNotification(text, type) {
     }, 3000);
 }
 
-const localStorageTokenKey = 'authToken';
-
-function setToken(token) {
-    localStorage.setItem(localStorageTokenKey, token);
-}
-
-function getToken() {
-    return localStorage.getItem(localStorageTokenKey);
-}
-
-function removeToken() {
-    localStorage.removeItem(localStorageTokenKey);
-}
-
-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
 
-        async function verifyToken() {
-            const token = getToken();
-
+        async function verifyToken(token) {
             if (!token) {
                 return null;
             }
@@ -74,30 +56,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     throw new Error(data.error || 'Invalid token');
                 }
 
-                if (!data || !data.nickname) {
-                    return null;
-                }
                 return data;
 
             } catch (error) {
                 console.error("Token verification failed:", error);
-                removeToken();
                 return null;
             }
         }
 
-        function updateHeader(userData) {
-            if (!userData || !userData.nickname) {
-                updateHeaderButtons();
-                return;
-            }
+        function updateHeader(nickname, role) {
             const navLinks = document.querySelector('.nav-links');
             let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
-            let buttonText = userData.nickname;
+            let buttonText = nickname;
 
-            if (userData.role) {
-                buttonText = `${userData.nickname} (${userData.role})`;
-                dropdownContent = `<a href="#">Роль: ${userData.role}</a>` + dropdownContent;
+            if (role) {
+                buttonText = `${nickname} (${role})`;
+                dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
             }
 
             navLinks.innerHTML = `
@@ -113,10 +87,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function logout() {
-            removeToken();
+            localStorage.removeItem('authToken');
             updateHeaderButtons();
             showNotification('Вы вышли из аккаунта', 'success');
-            window.location.href = 'login.html';
         }
 
         function updateHeaderButtons() {
@@ -128,27 +101,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const currentPage = window.location.pathname;
 
-        if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && getToken()) {
-            const userData = await verifyToken();
+        const storedToken = localStorage.getItem('authToken');
+
+        if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
+            const userData = await verifyToken(storedToken);
 
             if (userData) {
                 window.location.href = 'index.html';
                 return;
             } else {
-                removeToken();
+                localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
             }
         }
 
-        const authToken = getToken();
-        if (authToken) {
-            const userData = await verifyToken();
+
+        if (storedToken) {
+            const userData = await verifyToken(storedToken);
             if (userData) {
-                updateHeader(userData);
+                updateHeader(userData.nickname, userData.role);
                 showNotification('Добро пожаловать, ' + userData.nickname + '!', 'success');
             } else {
-                removeToken();
+                localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
@@ -185,10 +160,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             return;
                         }
 
-                        setToken(data.token); 
+                        localStorage.setItem('authToken', data.token);
 
-                        const userData = await verifyToken(); 
-                        updateHeader(userData);
+                        const userData = await verifyToken(data.token);
+                        updateHeader(userData.nickname, userData.role);
 
                         showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
                         loginForm.reset();
@@ -298,7 +273,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 form.prepend(errorMsg);
             }
         }
-
         const codeBtn = document.querySelector('.code-btn');
         const telegramInput = document.querySelector('input[placeholder="Цифры от бота"]');
         let cooldown = false;
