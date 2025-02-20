@@ -74,35 +74,48 @@ if (window.location.pathname.includes('applications.html')) {
     });
 }
 
-        function updateHeader(nickname, role) {
-            const navLinks = document.querySelector('.nav-links');
-            let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
-            let buttonText = nickname;
-            let curatorButtons = '';
-            if (role === 'kurator') {
-                curatorButtons = `
-                    <a href="applications.html" class="nav-btn">Заявки</a>
-                    <a href="staff.html" class="nav-btn">Персонал</a>
-                `;
-            }
-        
-            if (role) {
-                buttonText = `${nickname} (${role})`;
-                dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
-            }
-        
-            navLinks.innerHTML = `
-                ${curatorButtons}
-                <div class="dropdown">
-                    <button class="dropbtn">${buttonText}</button>
-                    <div class="dropdown-content">
-                        ${dropdownContent}
-                    </div>
-                </div>
-            `;
-        
-            document.getElementById('logoutBtn')?.addEventListener('click', logout);
-        }
+function updateHeader(nickname, role) {
+    const navLinks = document.querySelector('.nav-links');
+    let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
+    let buttonText = nickname;
+    let curatorButtons = '';
+    let downloadButton = '';
+
+    if (role === 'kurator') {
+        curatorButtons = `
+            <a href="applications.html" class="nav-btn">Заявки</a>
+            <a href="staff.html" class="nav-btn">Персонал</a>
+        `;
+    } else if (role === 'user') {
+        downloadButton = `<a href="#" id="downloadBtn" class="nav-btn">Скачать HelperTool2</a>`;
+    }
+
+    if (role) {
+        buttonText = `${nickname} (${role})`;
+        dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
+    }
+
+    navLinks.innerHTML = `
+        ${curatorButtons}
+        ${downloadButton}
+        <div class="dropdown">
+            <button class="dropbtn">${buttonText}</button>
+            <div class="dropdown-content">
+                ${dropdownContent}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadLatestVersion();
+        });
+    }
+}
+
         
 
         function logout() {
@@ -141,15 +154,21 @@ if (window.location.pathname.includes('applications.html')) {
             if (userData) {
                 updateHeader(userData.nickname, userData.role);
                 showNotification('Добро пожаловать, ' + userData.nickname + '!', 'success');
+                if (userData.role === 'user') {
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    if (downloadBtn) {
+                        downloadBtn.style.display = 'block';
+                    }
+                }
             } else {
                 localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
             }
-        } else {
-            updateHeaderButtons();
         }
+        
+
 
         const loginForm = document.querySelector('.auth-form');
         if (loginForm) {
@@ -368,6 +387,11 @@ if (window.location.pathname.includes('applications.html')) {
     }
 if (window.location.pathname.includes('applications.html')) {
     loadApplications();
+}
+function downloadLatestVersion() {
+    const repoUrl = 'https://github.com/YanderuxTea/HelperTool';
+    const latestReleaseUrl = `${repoUrl}/releases/latest`;
+    window.open(latestReleaseUrl, '_blank');
 }
 let currentPage = 1;
 const itemsPerPage = 3;
