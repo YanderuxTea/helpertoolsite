@@ -385,13 +385,13 @@ function updateHeader(nickname, role) {
             document.body.classList.add('loaded');
         }, 500);
     }
+    function downloadLatestVersion() {
+        const repoUrl = 'https://github.com/YanderuxTea/HelperTool';
+        const latestReleaseUrl = `${repoUrl}/releases/latest`;
+        window.open(latestReleaseUrl, '_blank');
+    }
 if (window.location.pathname.includes('applications.html')) {
     loadApplications();
-}
-function downloadLatestVersion() {
-    const repoUrl = 'https://github.com/YanderuxTea/HelperTool';
-    const latestReleaseUrl = `${repoUrl}/releases/latest`;
-    window.open(latestReleaseUrl, '_blank');
 }
 let currentPage = 1;
 const itemsPerPage = 3;
@@ -565,10 +565,10 @@ async function handleApplicationAction(e) {
         } else {
             showNotification('Ошибка обработки заявки', 'error');
         }
+        
     } catch (error) {
         showNotification('Ошибка соединения', 'error');
         console.error(error);
     }
 }
-    
 });
