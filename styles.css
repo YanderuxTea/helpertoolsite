@@ -198,7 +198,10 @@ body {
         padding: 0.4rem 0.8rem; 
         font-size: 0.8rem;
     }
-
+    .dropdown{
+    padding: 0.4rem 0.8rem; 
+    font-size: 0.8rem; 
+}
     .auth-form {
         padding: 2rem;
     }
