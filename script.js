@@ -430,7 +430,7 @@ async function loadApplications() {
 
         allApplications = await response.json();
         updateApplicationsDisplay();
-        updatePagination();
+
 
     } catch (error) {
         showNotification('Ошибка загрузки заявок', 'error');
@@ -522,7 +522,9 @@ function updatePagination(totalItems) {
     const paginationContainer = document.querySelector('.pagination-container');
     paginationContainer.innerHTML = '';
 
-    if (totalPages <= 1) return;
+    if (totalPages <= 1 || totalItems === 0) {
+        return;
+    }
 
     paginationContainer.innerHTML = `
         <button class="pagination-btn" id="prevPage" ${currentPage === 1 ? 'disabled' : ''}>←</button>
