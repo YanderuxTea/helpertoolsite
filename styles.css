@@ -185,7 +185,7 @@ body {
     transform: translateY(-2px);
 }
 
-@media (max-width: 740px) {
+@media (max-width: 768px) {
     .main-header {
         padding: 1rem;
     }
@@ -198,12 +198,22 @@ body {
         padding: 0.4rem 0.8rem; 
         font-size: 0.8rem;
     }
-    .dropdown{
-    padding: 0.4rem 0.8rem; 
-    font-size: 0.8rem; 
-}
+
     .auth-form {
         padding: 2rem;
+    }
+    .dropbtn {
+        padding: 0.4rem 0.8rem!important;
+        font-size: 0.8rem!important;
+    }
+
+    .dropdown-content {
+        min-width: 20px; 
+    }
+
+    .dropdown-content a {
+        padding: 8px 12px!important; 
+        font-size: 0.8rem!important; 
     }
 }
 
@@ -392,6 +402,7 @@ select.form-input option {
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 1;
     right: 0;
+    left: 0;
     border-radius: 0.5rem;
 }
 
