@@ -63,18 +63,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return null;
             }
         }
+if (window.location.pathname.includes('applications.html')) {
+    const token = localStorage.getItem('authToken');
+    if (!token) window.location.href = 'login.html';
+    
+    verifyToken(token).then(data => {
+        if (!data || data.role !== 'kurator') {
+            window.location.href = 'index.html';
+        }
+    });
+}
 
         function updateHeader(nickname, role) {
             const navLinks = document.querySelector('.nav-links');
             let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
             let buttonText = nickname;
-
+            let curatorButtons = '';
+            if (role === 'kurator') {
+                curatorButtons = `
+                    <a href="applications.html" class="nav-btn">Заявки</a>
+                    <a href="staff.html" class="nav-btn">Персонал</a>
+                `;
+            }
+        
             if (role) {
                 buttonText = `${nickname} (${role})`;
                 dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
             }
-
+        
             navLinks.innerHTML = `
+                ${curatorButtons}
                 <div class="dropdown">
                     <button class="dropbtn">${buttonText}</button>
                     <div class="dropdown-content">
@@ -82,9 +100,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
             `;
-
+        
             document.getElementById('logoutBtn')?.addEventListener('click', logout);
         }
+        
 
         function logout() {
             localStorage.removeItem('authToken');
@@ -347,4 +366,185 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.body.classList.add('loaded');
         }, 500);
     }
+if (window.location.pathname.includes('applications.html')) {
+    loadApplications();
+}
+let currentPage = 1;
+const itemsPerPage = 3;
+let allApplications = [];
+let searchQuery = '';
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    searchQuery = e.target.value.toLowerCase();
+    currentPage = 1;
+    updateApplicationsDisplay();
+});
+
+document.getElementById('clearSearch')?.addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
+    searchQuery = '';
+    currentPage = 1;
+    updateApplicationsDisplay();
+});
+
+async function loadApplications() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/get-applications', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.status === 403) {
+            showNotification('Доступ только для кураторов', 'error');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        allApplications = await response.json();
+        updateApplicationsDisplay();
+        updatePagination();
+
+    } catch (error) {
+        showNotification('Ошибка загрузки заявок', 'error');
+        console.error(error);
+    }
+}
+
+function truncateNickname(nickname) {
+    if (nickname.length > 6) {
+        return `${nickname.slice(0, 6)}...`;
+    }
+    return nickname;
+}
+
+function updateApplicationsDisplay() {
+    const container = document.getElementById('applicationsList');
+    container.classList.add('items-out');
+    container.style.pointerEvents = 'none';
+
+    setTimeout(() => {
+        container.innerHTML = '';
+        container.classList.remove('items-out');
+
+        const filtered = allApplications.filter(app => 
+            app.Nickname.toLowerCase().includes(searchQuery)
+        );
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const applicationsToShow = filtered.slice(start, end);
+
+        if (applicationsToShow.length === 0) {
+            container.innerHTML = '<div class="no-applications">' + 
+                (searchQuery ? 'Ничего не найдено 😞' : 'Нет активных заявок') + 
+                '</div>';
+            return;
+        }
+
+        applicationsToShow.forEach((app, index) => {
+            const item = document.createElement('div');
+            item.className = 'application-item';
+            
+            const originalNickname = app.Nickname;
+            const displayedNickname = truncateNickname(originalNickname);
+            const highlightSearchQuery = (text) => {
+                if (searchQuery) {
+                    return text.replace(
+                        new RegExp(`(${searchQuery})`, 'gi'), 
+                        '<span class="highlight">\$1</span>'
+                    );
+                }
+                return text;
+            };
+
+            const highlightedNickname = highlightSearchQuery(displayedNickname);
+            const highlightedFullNickname = highlightSearchQuery(originalNickname);
+
+            item.innerHTML = `
+                <span class="nickname" title="${originalNickname}">${highlightedNickname}</span>
+                <div class="application-actions">
+                    <button class="action-btn accept-btn" data-tgid="${app.Telegram_ID}">Принять</button>
+                    <button class="action-btn reject-btn" data-tgid="${app.Telegram_ID}">Отклонить</button>
+                </div>
+            `;
+            item.style.animationDelay = `${index * 0.1}s`;
+            container.appendChild(item);
+            item.addEventListener('click', () => {
+                item.classList.toggle('expanded');
+                const nicknameElement = item.querySelector('.nickname');
+                if (item.classList.contains('expanded')) {
+                    nicknameElement.innerHTML = highlightedFullNickname; 
+                } else {
+                    nicknameElement.innerHTML = highlightedNickname; 
+                }
+            });
+        });
+
+        container.style.pointerEvents = 'auto';
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', handleApplicationAction);
+        });
+
+        updatePagination(filtered.length);
+    }, 500);
+}
+
+function updatePagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const paginationContainer = document.querySelector('.pagination-container');
+    paginationContainer.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    paginationContainer.innerHTML = `
+        <button class="pagination-btn" id="prevPage" ${currentPage === 1 ? 'disabled' : ''}>←</button>
+        <span class="current-page">Страница ${currentPage} из ${totalPages}</span>
+        <button class="pagination-btn" id="nextPage" ${currentPage === totalPages ? 'disabled' : ''}>→</button>
+    `;
+
+    document.getElementById('prevPage')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updateApplicationsDisplay();
+        }
+    });
+
+    document.getElementById('nextPage')?.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateApplicationsDisplay();
+        }
+    });
+}
+
+async function handleApplicationAction(e) {
+    const action = e.target.classList.contains('accept-btn') ? 'accept' : 'reject';
+    const telegramId = e.target.dataset.tgid;
+
+    try {
+        const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/handle-application', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({ action, telegramId })
+        });
+
+        if (response.ok) {
+            showNotification(`Заявка ${action === 'accept' ? 'принята' : 'отклонена'}`, 'success');
+            loadApplications();
+        } else {
+            showNotification('Ошибка обработки заявки', 'error');
+        }
+    } catch (error) {
+        showNotification('Ошибка соединения', 'error');
+        console.error(error);
+    }
+}
+    
 });
