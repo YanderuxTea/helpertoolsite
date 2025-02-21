@@ -1,3 +1,4 @@
+
 const preloader = document.querySelector('.preloader');
 
 function createSymbol() {
