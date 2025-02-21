@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!token) {
                 return null;
             }
-
+        
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
@@ -53,21 +53,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Authorization': `Bearer ${token}`
                     },
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const userData = await verifyToken(data.token);
-                    updateHeader(userData.nickname, userData.role);
-                }
-
+        
                 if (!response.ok) {
-                    throw new Error(data.error || 'Invalid token');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ошибка проверки токена');
                 }
-
+        
+                const data = await response.json();
+        
+                if (!data || !data.nickname || !data.role) {
+                    throw new Error('Некорректные данные в ответе сервера');
+                }
+        
                 return data;
-
+        
             } catch (error) {
-                console.error("Token verification failed:", error);
+                console.error("Ошибка верификации токена:", error);
                 return null;
             }
         }
@@ -166,7 +167,7 @@ function logout() {
                     }
                 }
             } else {
-                eraseCookie('authToken');
+                document.cookie = 'authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;';
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
@@ -180,38 +181,35 @@ function logout() {
             if (loginForm.querySelector('h2').textContent === 'Вход') {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-
+                
                     const nickname = document.querySelector('input[placeholder="Никнейм"]').value.trim();
                     const password = document.querySelector('input[placeholder="Пароль"]').value.trim();
-
-                    if (!nickname || !password) {
-                        showNotification('Все поля обязательны', 'error');
-                        return;
-                    }
-
+                
                     try {
                         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
                             method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nickname, password })
-        });
-
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nickname, password })
+                        });
+                
                         const data = await response.json();
-
+                
                         if (!response.ok) {
                             showNotification(data.error || 'Ошибка входа', 'error');
                             return;
                         }
-
-
-                        const userData = await verifyToken(data.token);
-                        updateHeader(userData.nickname, userData.role);
-
-                        showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
-                        loginForm.reset();
-                        window.location.href = "index.html";
-
+                        const token = getCookie('authToken');
+                        const userData = await verifyToken(token);
+                
+                        if (userData) {
+                            updateHeader(userData.nickname, userData.role);
+                            showNotification('Вы успешно вошли в систему!', 'success');
+                            window.location.href = "index.html";
+                        } else {
+                            showNotification('Ошибка аутентификации', 'error');
+                        }
+                
                     } catch (error) {
                         showNotification('Ошибка соединения', 'error');
                         console.error(error);
