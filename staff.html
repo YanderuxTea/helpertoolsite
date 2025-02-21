@@ -213,7 +213,10 @@
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
-                    credentials: 'include'
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${storedToken}`
+                    },
                 });
 
                 const userData = await response.json();
@@ -250,8 +253,14 @@
 
         async function loadStaff() {
             try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/get-staff', {
-                    credentials: 'include'
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.status === 403) {
@@ -384,9 +393,9 @@
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/delete-user', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify({ telegramId })
                 });
 
