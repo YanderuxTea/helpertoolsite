@@ -35,7 +35,6 @@ function showNotification(text, type) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-
         async function verifyToken(token) {
             if (!token) {
                 return null;
@@ -50,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const data = await response.json();
 
-                if (!response.ok) {
+                if (!response.ok || !data.nickname) {
                     throw new Error(data.error || 'Invalid token');
                 }
 
@@ -61,74 +60,75 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return null;
             }
         }
-if (window.location.pathname.includes('applications.html')) {
-    const storedToken = getCookie('auth_token');
-    if (!token) window.location.href = 'login.html';
-    
-    verifyToken(token).then(data => {
-        if (!data || data.role !== 'kurator') {
-            window.location.href = 'index.html';
+
+        if (window.location.pathname.includes('applications.html')) {
+            const storedToken = getCookie('auth_token');
+            if (!storedToken) window.location.href = 'login.html';
+
+            verifyToken(storedToken).then(data => {
+                if (!data || data.role !== 'kurator') {
+                    window.location.href = 'index.html';
+                }
+            });
         }
-    });
-}
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
-function setCookie(name, value, days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/;secure;samesite=strict`;
-}
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
 
-function deleteCookie(name) {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-}
-function updateHeader(nickname, role) {
-    const navLinks = document.querySelector('.nav-links');
-    let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
-    let buttonText = nickname;
-    let curatorButtons = '';
-    let downloadButton = '';
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/;secure;samesite=strict`;
+        }
 
-    if (role === 'kurator') {
-        curatorButtons = `
-            <a href="applications.html" class="nav-btn">Заявки</a>
-            <a href="staff.html" class="nav-btn">Персонал</a>
-        `;
-    } else if (role === 'user') {
-        downloadButton = `<a href="#" id="downloadBtn" class="nav-btn">Скачать HelperTool2</a>`;
-    }
+        function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
 
-    if (role) {
-        buttonText = `${nickname} (${role})`;
-        dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
-    }
+        function updateHeader(nickname, role) {
+            const navLinks = document.querySelector('.nav-links');
+            let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
+            let buttonText = nickname;
+            let curatorButtons = '';
+            let downloadButton = '';
 
-    navLinks.innerHTML = `
-        ${curatorButtons}
-        ${downloadButton}
-        <div class="dropdown">
-            <button class="dropbtn">${buttonText}</button>
-            <div class="dropdown-content">
-                ${dropdownContent}
-            </div>
-        </div>
-    `;
+            if (role === 'kurator') {
+                curatorButtons = `
+                    <a href="applications.html" class="nav-btn">Заявки</a>
+                    <a href="staff.html" class="nav-btn">Персонал</a>
+                `;
+            } else if (role === 'user') {
+                downloadButton = `<a href="#" id="downloadBtn" class="nav-btn">Скачать HelperTool2</a>`;
+            }
 
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    const downloadBtn = document.getElementById('downloadBtn');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            downloadLatestVersion();
-        });
-    }
-}
+            if (role) {
+                buttonText = `${nickname} (${role})`;
+                dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
+            }
 
-        
+            navLinks.innerHTML = `
+                ${curatorButtons}
+                ${downloadButton}
+                <div class="dropdown">
+                    <button class="dropbtn">${buttonText}</button>
+                    <div class="dropdown-content">
+                        ${dropdownContent}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('logoutBtn')?.addEventListener('click', logout);
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    downloadLatestVersion();
+                });
+            }
+        }
 
         function logout() {
             deleteCookie('auth_token');
@@ -143,9 +143,9 @@ function updateHeader(nickname, role) {
                 <a href="login.html" class="nav-btn">Войти</a>
             `;
         }
-        const currentPage = window.location.pathname;
 
-        const storedToken = getCookie('auth_token'); 
+        const currentPage = window.location.pathname;
+        const storedToken = getCookie('auth_token');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -157,6 +157,25 @@ function updateHeader(nickname, role) {
                 deleteCookie('auth_token');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
+            }
+        }
+
+        if (storedToken) {
+            const userData = await verifyToken(storedToken);
+            if (userData) {
+                updateHeader(userData.nickname, userData.role);
+                showNotification('Добро пожаловать, ' + userData.nickname + '!', 'success');
+                if (userData.role === 'user') {
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    if (downloadBtn) {
+                        downloadBtn.style.display = 'block';
+                    }
+                }
+            } else {
+                deleteCookie('auth_token');
+                updateHeaderButtons();
+                showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
+                window.location.href = 'login.html';
             }
         }
 
@@ -429,7 +448,7 @@ document.getElementById('clearSearch')?.addEventListener('click', () => {
 async function loadApplications() {
     try {
         const storedToken = getCookie('auth_token');
-        if (!token) {
+        if (!storedToken) {
             window.location.href = 'login.html';
             return;
         }
@@ -447,8 +466,6 @@ async function loadApplications() {
 
         allApplications = await response.json();
         updateApplicationsDisplay();
-
-
     } catch (error) {
         showNotification('Ошибка загрузки заявок', 'error');
         console.error(error);
