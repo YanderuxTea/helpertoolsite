@@ -1,4 +1,3 @@
-
 const preloader = document.querySelector('.preloader');
 
 function createSymbol() {
@@ -223,7 +222,7 @@ function updateHeader(nickname, role) {
                             return;
                         }
 
-                        setCookie('authToken', data.token, 7); 
+                        setCookie('authToken', data.token, 7);
 
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
