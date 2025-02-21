@@ -233,7 +233,7 @@ if (loginForm) {
                 setCookie('auth_token', data.token, 7);
 
                 const userData = await verifyToken(data.token);
-                console.log('UserData from verifyToken:', userData); // Логирование
+                console.log('UserData from verifyToken:', userData);
                 if (!userData || !userData.nickname) {
                     showNotification('Ошибка аутентификации. Пожалуйста, войдите снова.', 'error');
                     deleteCookie('auth_token');
@@ -251,8 +251,66 @@ if (loginForm) {
                 console.error(error);
             }
         });
-    }
-}
+    
+            } else if (loginForm.querySelector('h2').textContent === 'Регистрация') {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const formData = {
+                        nickname: document.getElementById('nickname').value.trim(),
+                        password: document.getElementById('password').value.trim(),
+                        telegramId: document.getElementById('telegramId').value.trim(),
+                        code: document.getElementById('code').value.trim(),
+                        kuratorId: document.getElementById('kurator-select').value
+                    };
+
+                    if (!Object.values(formData).every(Boolean)) {
+                        showNotification('Все поля обязательны', 'error');
+                        return;
+                    }
+
+                    try {
+                        const nicknameCheck = await fetch(
+                            'https://helpertool2.teawithsuqar.workers.dev/check-nickname',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ nickname: formData.nickname })
+                            }
+                        );
+
+                        if ((await nicknameCheck.json()).exists) {
+                            showNotification('Никнейм занят', 'error');
+                            return;
+                        }
+
+                        const response = await fetch(
+                            'https://helpertool2.teawithsuqar.workers.dev/register',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(formData)
+                            }
+                        );
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            showNotification(error.error, 'error');
+                            return;
+                        }
+
+                        showNotification('Регистрация успешна!', 'success');
+                        document.querySelector('.auth-form').reset();
+
+                    } catch (error) {
+                        showNotification('Ошибка соединения', 'error');
+                        console.error(error);
+                    }
+                });
+            }
+        }
         if (document.getElementById('kurator-select')) {
             const select = document.getElementById('kurator-select');
             const form = document.querySelector('form');
