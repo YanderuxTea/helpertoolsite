@@ -32,30 +32,6 @@ function showNotification(text, type) {
         setTimeout(() => notification.remove(), 500);
     }, 3000);
 }
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-function eraseCookie(name) {
-    document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-}
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -74,7 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     },
                 });
 
-                const data = await response.json();
+                if (response.ok) {
+                    const data = await response.json();
+                    const userData = await verifyToken(data.token);
+                    updateHeader(userData.nickname, userData.role);
+                }
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Invalid token');
@@ -211,9 +191,10 @@ function updateHeader(nickname, role) {
                     try {
                         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ nickname, password })
-                        });
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nickname, password })
+        });
 
                         const data = await response.json();
 
@@ -222,7 +203,6 @@ function updateHeader(nickname, role) {
                             return;
                         }
 
-                        setCookie('authToken', data.token, 7);
 
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
@@ -257,6 +237,7 @@ function updateHeader(nickname, role) {
                         const nicknameCheck = await fetch(
                             'https://helpertool2.teawithsuqar.workers.dev/check-nickname',
                             {
+                                credentials: 'include',
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ nickname: formData.nickname })
@@ -271,6 +252,7 @@ function updateHeader(nickname, role) {
                         const response = await fetch(
                             'https://helpertool2.teawithsuqar.workers.dev/register',
                             {
+                                credentials: 'include',
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(formData)
@@ -352,6 +334,7 @@ function updateHeader(nickname, role) {
                 try {
                     const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/check-telegram', {
                         method: 'POST',
+                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ telegramId })
                     });
@@ -443,6 +426,7 @@ async function loadApplications() {
         }
 
         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/get-applications', {
+            credentials: 'include',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -577,6 +561,7 @@ async function handleApplicationAction(e) {
 
     try {
         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/handle-application', {
+            credentials: 'include',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
