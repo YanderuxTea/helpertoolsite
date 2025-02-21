@@ -35,6 +35,7 @@ function showNotification(text, type) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+
         async function verifyToken(token) {
             if (!token) {
                 return null;
@@ -43,13 +44,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                 });
 
                 const data = await response.json();
 
-                if (!response.ok || !data.nickname) {
+                if (!response.ok) {
                     throw new Error(data.error || 'Invalid token');
                 }
 
@@ -60,78 +63,63 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return null;
             }
         }
-
-        if (window.location.pathname.includes('applications.html')) {
-            const storedToken = getCookie('auth_token');
-            if (!storedToken) window.location.href = 'login.html';
-
-            verifyToken(storedToken).then(data => {
-                if (!data || data.role !== 'kurator') {
-                    window.location.href = 'index.html';
-                }
-            });
+if (window.location.pathname.includes('applications.html')) {
+    const token = localStorage.getItem('authToken');
+    if (!token) window.location.href = 'login.html';
+    
+    verifyToken(token).then(data => {
+        if (!data || data.role !== 'kurator') {
+            window.location.href = 'index.html';
         }
+    });
+}
 
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
+function updateHeader(nickname, role) {
+    const navLinks = document.querySelector('.nav-links');
+    let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
+    let buttonText = nickname;
+    let curatorButtons = '';
+    let downloadButton = '';
 
-        function setCookie(name, value, days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/;secure;samesite=strict`;
-        }
+    if (role === 'kurator') {
+        curatorButtons = `
+            <a href="applications.html" class="nav-btn">Заявки</a>
+            <a href="staff.html" class="nav-btn">Персонал</a>
+        `;
+    } else if (role === 'user') {
+        downloadButton = `<a href="#" id="downloadBtn" class="nav-btn">Скачать HelperTool2</a>`;
+    }
 
-        function deleteCookie(name) {
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
+    if (role) {
+        buttonText = `${nickname} (${role})`;
+        dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
+    }
 
-        function updateHeader(nickname, role) {
-            const navLinks = document.querySelector('.nav-links');
-            let dropdownContent = `<a href="#" id="logoutBtn">Выйти</a>`;
-            let buttonText = nickname;
-            let curatorButtons = '';
-            let downloadButton = '';
+    navLinks.innerHTML = `
+        ${curatorButtons}
+        ${downloadButton}
+        <div class="dropdown">
+            <button class="dropbtn">${buttonText}</button>
+            <div class="dropdown-content">
+                ${dropdownContent}
+            </div>
+        </div>
+    `;
 
-            if (role === 'kurator') {
-                curatorButtons = `
-                    <a href="applications.html" class="nav-btn">Заявки</a>
-                    <a href="staff.html" class="nav-btn">Персонал</a>
-                `;
-            } else if (role === 'user') {
-                downloadButton = `<a href="#" id="downloadBtn" class="nav-btn">Скачать HelperTool2</a>`;
-            }
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadLatestVersion();
+        });
+    }
+}
 
-            if (role) {
-                buttonText = `${nickname} (${role})`;
-                dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
-            }
-
-            navLinks.innerHTML = `
-                ${curatorButtons}
-                ${downloadButton}
-                <div class="dropdown">
-                    <button class="dropbtn">${buttonText}</button>
-                    <div class="dropdown-content">
-                        ${dropdownContent}
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('logoutBtn')?.addEventListener('click', logout);
-            const downloadBtn = document.getElementById('downloadBtn');
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    downloadLatestVersion();
-                });
-            }
-        }
+        
 
         function logout() {
-            deleteCookie('auth_token');
+            localStorage.removeItem('authToken');
             updateHeaderButtons();
             showNotification('Вы вышли из аккаунта', 'success');
         }
@@ -143,9 +131,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <a href="login.html" class="nav-btn">Войти</a>
             `;
         }
-
         const currentPage = window.location.pathname;
-        const storedToken = getCookie('auth_token');
+
+        const storedToken = localStorage.getItem('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -154,28 +142,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.location.href = 'index.html';
                 return;
             } else {
-                deleteCookie('auth_token');
+                localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
-            }
-        }
-
-        if (storedToken) {
-            const userData = await verifyToken(storedToken);
-            if (userData) {
-                updateHeader(userData.nickname, userData.role);
-                showNotification('Добро пожаловать, ' + userData.nickname + '!', 'success');
-                if (userData.role === 'user') {
-                    const downloadBtn = document.getElementById('downloadBtn');
-                    if (downloadBtn) {
-                        downloadBtn.style.display = 'block';
-                    }
-                }
-            } else {
-                deleteCookie('auth_token');
-                updateHeaderButtons();
-                showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
-                window.location.href = 'login.html';
             }
         }
 
@@ -192,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             } else {
-                deleteCookie('auth_token');
+                localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
@@ -202,56 +171,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
         const loginForm = document.querySelector('.auth-form');
-if (loginForm) {
-    if (loginForm.querySelector('h2').textContent === 'Вход') {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        if (loginForm) {
+            if (loginForm.querySelector('h2').textContent === 'Вход') {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
 
-            const nickname = document.querySelector('input[placeholder="Никнейм"]').value.trim();
-            const password = document.querySelector('input[placeholder="Пароль"]').value.trim();
+                    const nickname = document.querySelector('input[placeholder="Никнейм"]').value.trim();
+                    const password = document.querySelector('input[placeholder="Пароль"]').value.trim();
 
-            if (!nickname || !password) {
-                showNotification('Все поля обязательны', 'error');
-                return;
-            }
+                    if (!nickname || !password) {
+                        showNotification('Все поля обязательны', 'error');
+                        return;
+                    }
 
-            try {
-                const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ nickname, password })
+                    try {
+                        const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nickname, password })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            showNotification(data.error || 'Ошибка входа', 'error');
+                            return;
+                        }
+
+                        localStorage.setItem('authToken', data.token);
+
+                        const userData = await verifyToken(data.token);
+                        updateHeader(userData.nickname, userData.role);
+
+                        showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
+                        loginForm.reset();
+                        window.location.href = "index.html";
+
+                    } catch (error) {
+                        showNotification('Ошибка соединения', 'error');
+                        console.error(error);
+                    }
                 });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    showNotification(data.error || 'Ошибка входа', 'error');
-                    return;
-                }
-
-                setCookie('auth_token', data.token, 7);
-
-                const userData = await verifyToken(data.token);
-                console.log('UserData from verifyToken:', userData);
-                if (!userData || !userData.nickname) {
-                    showNotification('Ошибка аутентификации. Пожалуйста, войдите снова.', 'error');
-                    deleteCookie('auth_token');
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                updateHeader(userData.nickname, userData.role);
-                showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
-                loginForm.reset();
-                window.location.href = "index.html";
-
-            } catch (error) {
-                showNotification('Ошибка соединения', 'error');
-                console.error(error);
-            }
-        });
-    
             } else if (loginForm.querySelector('h2').textContent === 'Регистрация') {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -275,7 +235,6 @@ if (loginForm) {
                             {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                credentials: 'include',
                                 body: JSON.stringify({ nickname: formData.nickname })
                             }
                         );
@@ -290,7 +249,6 @@ if (loginForm) {
                             {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                credentials: 'include',
                                 body: JSON.stringify(formData)
                             }
                         );
@@ -371,7 +329,6 @@ if (loginForm) {
                     const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/check-telegram', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
                         body: JSON.stringify({ telegramId })
                     });
 
@@ -455,15 +412,14 @@ document.getElementById('clearSearch')?.addEventListener('click', () => {
 
 async function loadApplications() {
     try {
-        const storedToken = getCookie('auth_token');
-        if (!storedToken) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
             window.location.href = 'login.html';
             return;
         }
 
         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/get-applications', {
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (response.status === 403) {
@@ -474,6 +430,8 @@ async function loadApplications() {
 
         allApplications = await response.json();
         updateApplicationsDisplay();
+
+
     } catch (error) {
         showNotification('Ошибка загрузки заявок', 'error');
         console.error(error);
@@ -588,21 +546,7 @@ function updatePagination(totalItems) {
         }
     });
 }
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
-function setCookie(name, value, days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/;secure;samesite=strict`;
-}
-
-function deleteCookie(name) {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-}
 async function handleApplicationAction(e) {
     const action = e.target.classList.contains('accept-btn') ? 'accept' : 'reject';
     const telegramId = e.target.dataset.tgid;
@@ -610,8 +554,10 @@ async function handleApplicationAction(e) {
     try {
         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/handle-application', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
             body: JSON.stringify({ action, telegramId })
         });
 
