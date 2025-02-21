@@ -1,5 +1,9 @@
 const preloader = document.querySelector('.preloader');
-
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
 function createSymbol() {
     const colors = ['green', 'brown', 'stone', 'red', 'blue'];
     const particle = document.createElement('div');
@@ -67,16 +71,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return null;
             }
         }
-if (window.location.pathname.includes('applications.html')) {
-    const token = getCookie('authToken');
-    if (!token) window.location.href = 'login.html';
-    
-    verifyToken(token).then(data => {
-        if (!data || data.role !== 'kurator') {
-            window.location.href = 'index.html';
+        if (window.location.pathname.includes('applications.html')) {
+            const token = getCookie('authToken');
+            if (!token) window.location.href = 'login.html';
+            
+            verifyToken(token).then(data => {
+                if (!data || data.role !== 'kurator') {
+                    window.location.href = 'index.html';
+                }
+            });
         }
-    });
-}
 
 function updateHeader(nickname, role) {
     const navLinks = document.querySelector('.nav-links');
@@ -122,11 +126,11 @@ function updateHeader(nickname, role) {
 
         
 
-        function logout() {
-            eraseCookie('authToken');
-            updateHeaderButtons();
-            showNotification('Вы вышли из аккаунта', 'success');
-        }
+function logout() {
+    document.cookie = 'authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+    updateHeaderButtons();
+    showNotification('Вы вышли из аккаунта', 'success');
+}
 
         function updateHeaderButtons() {
             const navLinks = document.querySelector('.nav-links');
@@ -136,12 +140,9 @@ function updateHeader(nickname, role) {
             `;
         }
         const currentPage = window.location.pathname;
-
         const storedToken = getCookie('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
-            const userData = await verifyToken(storedToken);
-
             if (userData) {
                 window.location.href = 'index.html';
                 return;
