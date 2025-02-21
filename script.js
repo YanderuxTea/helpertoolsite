@@ -36,16 +36,7 @@ function showNotification(text, type) {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
 
-        async function verifyToken() {
-            const cookieHeader = document.cookie;
-            const cookies = cookieHeader.split('; ').reduce((prev, current) => {
-                const [name, ...rest] = current.split('=');
-                prev[name] = rest.join('=');
-                return prev;
-            }, {});
-        
-            const token = cookies.authToken;
-        
+        async function verifyToken(token) {
             if (!token) {
                 return null;
             }
@@ -62,16 +53,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const data = await response.json();
         
                 if (!response.ok) {
-                    throw new Error(data.error || 'Invalid token');
+                    throw new Error(data.error || 'Недействительный токен');
                 }
         
                 return data;
         
             } catch (error) {
-                console.error("Token verification failed:", error);
-                return null;
+                console.error("Ошибка проверки токена:", error);
+                return null; 
             }
         }
+        
         
 if (window.location.pathname.includes('applications.html')) {
     const token = localStorage.getItem('authToken');
