@@ -32,29 +32,15 @@ function showNotification(text, type) {
         setTimeout(() => notification.remove(), 500);
     }, 3000);
 }
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
 function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='))
+        ?.split('=')[1];
 }
 
 function eraseCookie(name) {
-    document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict; Secure`;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -68,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -142,11 +129,17 @@ function updateHeader(nickname, role) {
 
         
 
-        function logout() {
-            eraseCookie('authToken');
-            updateHeaderButtons();
-            showNotification('Вы вышли из аккаунта', 'success');
-        }
+async function logout() {
+    try {
+        await fetch('https://helpertool2.teawithsuqar.workers.dev/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Logout failed:', error);
+    }
+}
 
         function updateHeaderButtons() {
             const navLinks = document.querySelector('.nav-links');
@@ -211,6 +204,7 @@ function updateHeader(nickname, role) {
                     try {
                         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
                             method: 'POST',
+                            credentials: 'include',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ nickname, password })
                         });
@@ -258,6 +252,7 @@ function updateHeader(nickname, role) {
                             'https://helpertool2.teawithsuqar.workers.dev/check-nickname',
                             {
                                 method: 'POST',
+                                credentials: 'include',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ nickname: formData.nickname })
                             }
@@ -272,6 +267,7 @@ function updateHeader(nickname, role) {
                             'https://helpertool2.teawithsuqar.workers.dev/register',
                             {
                                 method: 'POST',
+                                credentials: 'include',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(formData)
                             }
@@ -352,6 +348,7 @@ function updateHeader(nickname, role) {
                 try {
                     const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/check-telegram', {
                         method: 'POST',
+                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ telegramId })
                     });
@@ -443,7 +440,8 @@ async function loadApplications() {
         }
 
         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/get-applications', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include'
         });
 
         if (response.status === 403) {
@@ -578,6 +576,7 @@ async function handleApplicationAction(e) {
     try {
         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/handle-application', {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getCookie('authToken')}`
