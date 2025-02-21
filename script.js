@@ -1,3 +1,4 @@
+
 const preloader = document.querySelector('.preloader');
 
 function createSymbol() {
@@ -33,6 +34,32 @@ function showNotification(text, type) {
     }, 3000);
 }
 
+// Cookie Helper Functions
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
 
@@ -64,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 if (window.location.pathname.includes('applications.html')) {
-    const token = localStorage.getItem('authToken');
+    const token = getCookie('authToken');
     if (!token) window.location.href = 'login.html';
     
     verifyToken(token).then(data => {
@@ -119,7 +146,7 @@ function updateHeader(nickname, role) {
         
 
         function logout() {
-            localStorage.removeItem('authToken');
+            eraseCookie('authToken');
             updateHeaderButtons();
             showNotification('Вы вышли из аккаунта', 'success');
         }
@@ -133,7 +160,7 @@ function updateHeader(nickname, role) {
         }
         const currentPage = window.location.pathname;
 
-        const storedToken = localStorage.getItem('authToken');
+        const storedToken = getCookie('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -142,7 +169,7 @@ function updateHeader(nickname, role) {
                 window.location.href = 'index.html';
                 return;
             } else {
-                localStorage.removeItem('authToken');
+                eraseCookie('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
             }
@@ -161,7 +188,7 @@ function updateHeader(nickname, role) {
                     }
                 }
             } else {
-                localStorage.removeItem('authToken');
+                eraseCookie('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
@@ -198,7 +225,7 @@ function updateHeader(nickname, role) {
                             return;
                         }
 
-                        localStorage.setItem('authToken', data.token);
+                        setCookie('authToken', data.token, 7); // expires in 7 days
 
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
@@ -412,7 +439,7 @@ document.getElementById('clearSearch')?.addEventListener('click', () => {
 
 async function loadApplications() {
     try {
-        const token = localStorage.getItem('authToken');
+        const token = getCookie('authToken');
         if (!token) {
             window.location.href = 'login.html';
             return;
@@ -556,7 +583,7 @@ async function handleApplicationAction(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${getCookie('authToken')}`
             },
             body: JSON.stringify({ action, telegramId })
         });
