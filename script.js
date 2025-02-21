@@ -32,12 +32,7 @@ function showNotification(text, type) {
         setTimeout(() => notification.remove(), 500);
     }, 3000);
 }
-function getCookie(name) {
-    return document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name + '='))
-        ?.split('=')[1];
-}
+
 
 function eraseCookie(name) {
     document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict; Secure`;
@@ -75,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 if (window.location.pathname.includes('applications.html')) {
-    const token = getCookie('authToken');
     if (!token) window.location.href = 'login.html';
     
     verifyToken(token).then(data => {
@@ -150,7 +144,6 @@ async function logout() {
         }
         const currentPage = window.location.pathname;
 
-        const storedToken = getCookie('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -216,7 +209,6 @@ async function logout() {
                             return;
                         }
 
-                        setCookie('authToken', data.token, 7);
 
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
@@ -433,7 +425,6 @@ document.getElementById('clearSearch')?.addEventListener('click', () => {
 
 async function loadApplications() {
     try {
-        const token = getCookie('authToken');
         if (!token) {
             window.location.href = 'login.html';
             return;
@@ -578,8 +569,7 @@ async function handleApplicationAction(e) {
             method: 'POST',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getCookie('authToken')}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ action, telegramId })
         });

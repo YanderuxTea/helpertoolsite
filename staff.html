@@ -202,18 +202,11 @@
 </style>
     <script src="script.js"></script>
     <script>
-        function getCookie(name) {
-    return document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name + '='))
-        ?.split('=')[1];
-}
 
 function eraseCookie(name) {
     document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict; Secure`;
 }
         document.addEventListener('DOMContentLoaded', async () => {
-            const storedToken = getCookie('authToken');
             
             if (!storedToken) {
                 window.location.href = 'index.html';
@@ -264,7 +257,6 @@ function eraseCookie(name) {
 
         async function loadStaff() {
             try {
-                const token = getCookie('authToken'); 
                 if (!token) {
                     window.location.href = 'login.html';
                     return;
@@ -406,8 +398,7 @@ try {
         method: 'POST',
         credentials: 'include',
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getCookie('authToken')}`
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({ telegramId })
     });
