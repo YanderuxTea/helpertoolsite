@@ -1,5 +1,28 @@
 const preloader = document.querySelector('.preloader');
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/; Secure; SameSite=Strict";
+}
 
+function getCookie(name) {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for(let i=0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
+    }
+    return null;
+}
+
+function deleteCookie(name) {
+    document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure; SameSite=Strict';
+}
 function createSymbol() {
     const colors = ['green', 'brown', 'stone', 'red', 'blue'];
     const particle = document.createElement('div');
@@ -63,16 +86,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return null;
             }
         }
-if (window.location.pathname.includes('applications.html')) {
-    const token = localStorage.getItem('authToken');
-    if (!token) window.location.href = 'login.html';
-    
-    verifyToken(token).then(data => {
-        if (!data || data.role !== 'kurator') {
-            window.location.href = 'index.html';
+        if (window.location.pathname.includes('applications.html')) {
+            const token = getCookie('authToken');
+            if (!token) window.location.href = 'login.html';
+            
+            verifyToken(token).then(data => {
+                if (!data || data.role !== 'kurator') {
+                    window.location.href = 'index.html';
+                }
+            });
         }
-    });
-}
 
 function updateHeader(nickname, role) {
     const navLinks = document.querySelector('.nav-links');
@@ -118,11 +141,11 @@ function updateHeader(nickname, role) {
 
         
 
-        function logout() {
-            localStorage.removeItem('authToken');
-            updateHeaderButtons();
-            showNotification('Вы вышли из аккаунта', 'success');
-        }
+function logout() {
+    deleteCookie('authToken');
+    updateHeaderButtons();
+    showNotification('Вы вышли из аккаунта', 'success');
+}
 
         function updateHeaderButtons() {
             const navLinks = document.querySelector('.nav-links');
@@ -133,7 +156,7 @@ function updateHeader(nickname, role) {
         }
         const currentPage = window.location.pathname;
 
-        const storedToken = localStorage.getItem('authToken');
+        const storedToken = getCookie('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -142,7 +165,7 @@ function updateHeader(nickname, role) {
                 window.location.href = 'index.html';
                 return;
             } else {
-                localStorage.removeItem('authToken');
+                deleteCookie('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
             }
@@ -161,7 +184,7 @@ function updateHeader(nickname, role) {
                     }
                 }
             } else {
-                localStorage.removeItem('authToken');
+                deleteCookie('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
@@ -198,7 +221,7 @@ function updateHeader(nickname, role) {
                             return;
                         }
 
-                        localStorage.setItem('authToken', data.token);
+                        setCookie('authToken', data.token, 1); 
 
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
@@ -412,7 +435,7 @@ document.getElementById('clearSearch')?.addEventListener('click', () => {
 
 async function loadApplications() {
     try {
-        const token = localStorage.getItem('authToken');
+        const token = getCookie('authToken'); 
         if (!token) {
             window.location.href = 'login.html';
             return;
@@ -556,7 +579,7 @@ async function handleApplicationAction(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${getCookie('authToken')}`
             },
             body: JSON.stringify({ action, telegramId })
         });
