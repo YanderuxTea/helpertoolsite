@@ -33,8 +33,6 @@ function showNotification(text, type) {
         setTimeout(() => notification.remove(), 500);
     }, 3000);
 }
-
-// Cookie Helper Functions
 function setCookie(name, value, days) {
     let expires = "";
     if (days) {
@@ -225,7 +223,7 @@ function updateHeader(nickname, role) {
                             return;
                         }
 
-                        setCookie('authToken', data.token, 7); // expires in 7 days
+                        setCookie('authToken', data.token, 7);
 
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
