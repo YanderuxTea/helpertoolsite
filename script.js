@@ -1,4 +1,3 @@
-
 const preloader = document.querySelector('.preloader');
 
 function createSymbol() {
@@ -34,18 +33,6 @@ function showNotification(text, type) {
     }, 3000);
 }
 
-// Функция для получения токена из cookie
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
-
-// Функция для удаления cookie
-function deleteCookie(name) {
-    document.cookie = `${name}=; Max-Age=0; path=/;`; // Укажите path=/, чтобы удалить cookie для всего домена
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
     try {
 
@@ -77,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 if (window.location.pathname.includes('applications.html')) {
-    const token = getCookie('authToken');
+    const token = localStorage.getItem('authToken');
     if (!token) window.location.href = 'login.html';
     
     verifyToken(token).then(data => {
@@ -132,7 +119,7 @@ function updateHeader(nickname, role) {
         
 
         function logout() {
-            deleteCookie('authToken');
+            localStorage.removeItem('authToken');
             updateHeaderButtons();
             showNotification('Вы вышли из аккаунта', 'success');
         }
@@ -146,7 +133,7 @@ function updateHeader(nickname, role) {
         }
         const currentPage = window.location.pathname;
 
-        const storedToken = getCookie('authToken');
+        const storedToken = localStorage.getItem('authToken');
 
         if ((currentPage.endsWith('register.html') || currentPage.endsWith('login.html')) && storedToken) {
             const userData = await verifyToken(storedToken);
@@ -155,7 +142,7 @@ function updateHeader(nickname, role) {
                 window.location.href = 'index.html';
                 return;
             } else {
-                deleteCookie('authToken');
+                localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
             }
@@ -174,7 +161,7 @@ function updateHeader(nickname, role) {
                     }
                 }
             } else {
-                deleteCookie('authToken');
+                localStorage.removeItem('authToken');
                 updateHeaderButtons();
                 showNotification('Недействительный токен. Пожалуйста, войдите снова.', 'error');
                 window.location.href = 'login.html';
@@ -211,8 +198,8 @@ function updateHeader(nickname, role) {
                             return;
                         }
 
-                        // localStorage.setItem('authToken', data.token);
-                        // setCookie('authToken', data.token, 1); // Установите Cookie на 1 день
+                        localStorage.setItem('authToken', data.token);
+
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
 
@@ -425,7 +412,7 @@ document.getElementById('clearSearch')?.addEventListener('click', () => {
 
 async function loadApplications() {
     try {
-        const token = getCookie('authToken');
+        const token = localStorage.getItem('authToken');
         if (!token) {
             window.location.href = 'login.html';
             return;
@@ -569,7 +556,7 @@ async function handleApplicationAction(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getCookie('authToken')}`
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             },
             body: JSON.stringify({ action, telegramId })
         });
