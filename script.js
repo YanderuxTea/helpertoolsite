@@ -32,39 +32,11 @@ function showNotification(text, type) {
         setTimeout(() => notification.remove(), 500);
     }, 3000);
 }
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-function eraseCookie(name) {
-    document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-}
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
 
-        async function verifyToken(token) {
-            if (!token) {
-                return null;
-            }
-
+        async function verifyToken() {
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
@@ -73,15 +45,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Authorization': `Bearer ${token}`
                     },
                 });
-
+        
                 const data = await response.json();
-
+        
                 if (!response.ok) {
                     throw new Error(data.error || 'Invalid token');
                 }
-
+        
                 return data;
-
+        
             } catch (error) {
                 console.error("Token verification failed:", error);
                 return null;
@@ -142,11 +114,22 @@ function updateHeader(nickname, role) {
 
         
 
-        function logout() {
-            eraseCookie('authToken');
-            updateHeaderButtons();
-            showNotification('Вы вышли из аккаунта', 'success');
+function logout() {
+    fetch('https://helpertool2.teawithsuqar.workers.dev/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getCookie('authToken')}`
         }
+    }).then(() => {
+        updateHeaderButtons();
+        showNotification('Вы вышли из аккаунта', 'success');
+        window.location.href = 'login.html';
+    }).catch(error => {
+        console.error('Logout error:', error);
+        showNotification('Ошибка при выходе', 'error');
+    });
+}
 
         function updateHeaderButtons() {
             const navLinks = document.querySelector('.nav-links');
@@ -195,47 +178,46 @@ function updateHeader(nickname, role) {
 
 
         const loginForm = document.querySelector('.auth-form');
-        if (loginForm) {
-            if (loginForm.querySelector('h2').textContent === 'Вход') {
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+if (loginForm) {
+    if (loginForm.querySelector('h2').textContent === 'Вход') {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-                    const nickname = document.querySelector('input[placeholder="Никнейм"]').value.trim();
-                    const password = document.querySelector('input[placeholder="Пароль"]').value.trim();
+            const nickname = document.querySelector('input[placeholder="Никнейм"]').value.trim();
+            const password = document.querySelector('input[placeholder="Пароль"]').value.trim();
 
-                    if (!nickname || !password) {
-                        showNotification('Все поля обязательны', 'error');
-                        return;
-                    }
+            if (!nickname || !password) {
+                showNotification('Все поля обязательны', 'error');
+                return;
+            }
 
-                    try {
-                        const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ nickname, password })
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok) {
-                            showNotification(data.error || 'Ошибка входа', 'error');
-                            return;
-                        }
-
-                        setCookie('authToken', data.token, 7);
-
-                        const userData = await verifyToken(data.token);
-                        updateHeader(userData.nickname, userData.role);
-
-                        showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
-                        loginForm.reset();
-                        window.location.href = "index.html";
-
-                    } catch (error) {
-                        showNotification('Ошибка соединения', 'error');
-                        console.error(error);
-                    }
+            try {
+                const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname, password })
                 });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showNotification(data.error || 'Ошибка входа', 'error');
+                    return;
+                }
+
+                const userData = await verifyToken(data.token);
+                updateHeader(userData.nickname, userData.role);
+
+                showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
+                loginForm.reset();
+                window.location.href = "index.html";
+
+            } catch (error) {
+                showNotification('Ошибка соединения', 'error');
+                console.error(error);
+            }
+        });
+    
             } else if (loginForm.querySelector('h2').textContent === 'Регистрация') {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
