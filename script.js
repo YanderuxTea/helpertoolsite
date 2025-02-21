@@ -36,11 +36,20 @@ function showNotification(text, type) {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
 
-        async function verifyToken(token) {
+        async function verifyToken() {
+            const cookieHeader = document.cookie;
+            const cookies = cookieHeader.split('; ').reduce((prev, current) => {
+                const [name, ...rest] = current.split('=');
+                prev[name] = rest.join('=');
+                return prev;
+            }, {});
+        
+            const token = cookies.authToken;
+        
             if (!token) {
                 return null;
             }
-
+        
             try {
                 const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/verify-token', {
                     method: 'POST',
@@ -49,20 +58,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                         'Authorization': `Bearer ${token}`
                     },
                 });
-
+        
                 const data = await response.json();
-
+        
                 if (!response.ok) {
                     throw new Error(data.error || 'Invalid token');
                 }
-
+        
                 return data;
-
+        
             } catch (error) {
                 console.error("Token verification failed:", error);
                 return null;
             }
         }
+        
 if (window.location.pathname.includes('applications.html')) {
     const token = localStorage.getItem('authToken');
     if (!token) window.location.href = 'login.html';
@@ -118,11 +128,12 @@ function updateHeader(nickname, role) {
 
         
 
-        function logout() {
-            localStorage.removeItem('authToken');
-            updateHeaderButtons();
-            showNotification('Вы вышли из аккаунта', 'success');
-        }
+function logout() {
+    document.cookie = 'authToken=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict';
+    updateHeaderButtons();
+    showNotification('Вы вышли из аккаунта', 'success');
+}
+
 
         function updateHeaderButtons() {
             const navLinks = document.querySelector('.nav-links');
@@ -150,7 +161,7 @@ function updateHeader(nickname, role) {
 
 
         if (storedToken) {
-            const userData = await verifyToken(storedToken);
+            const userData = await verifyToken();
             if (userData) {
                 updateHeader(userData.nickname, userData.role);
                 showNotification('Добро пожаловать, ' + userData.nickname + '!', 'success');
@@ -175,93 +186,37 @@ function updateHeader(nickname, role) {
             if (loginForm.querySelector('h2').textContent === 'Вход') {
                 loginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-
+        
                     const nickname = document.querySelector('input[placeholder="Никнейм"]').value.trim();
                     const password = document.querySelector('input[placeholder="Пароль"]').value.trim();
-
+        
                     if (!nickname || !password) {
                         showNotification('Все поля обязательны', 'error');
                         return;
                     }
-
+        
                     try {
                         const response = await fetch('https://helpertool2.teawithsuqar.workers.dev/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ nickname, password })
                         });
-
+        
                         const data = await response.json();
-
+        
                         if (!response.ok) {
                             showNotification(data.error || 'Ошибка входа', 'error');
                             return;
                         }
-
-                        localStorage.setItem('authToken', data.token);
-
+                        document.cookie = `authToken=${data.token}; HttpOnly; Secure; SameSite=Strict; Path=/`;
+        
                         const userData = await verifyToken(data.token);
                         updateHeader(userData.nickname, userData.role);
-
+        
                         showNotification('Вы успешно вошли в систему, ' + userData.nickname + '!', 'success');
                         loginForm.reset();
                         window.location.href = "index.html";
-
-                    } catch (error) {
-                        showNotification('Ошибка соединения', 'error');
-                        console.error(error);
-                    }
-                });
-            } else if (loginForm.querySelector('h2').textContent === 'Регистрация') {
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const formData = {
-                        nickname: document.getElementById('nickname').value.trim(),
-                        password: document.getElementById('password').value.trim(),
-                        telegramId: document.getElementById('telegramId').value.trim(),
-                        code: document.getElementById('code').value.trim(),
-                        kuratorId: document.getElementById('kurator-select').value
-                    };
-
-                    if (!Object.values(formData).every(Boolean)) {
-                        showNotification('Все поля обязательны', 'error');
-                        return;
-                    }
-
-                    try {
-                        const nicknameCheck = await fetch(
-                            'https://helpertool2.teawithsuqar.workers.dev/check-nickname',
-                            {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ nickname: formData.nickname })
-                            }
-                        );
-
-                        if ((await nicknameCheck.json()).exists) {
-                            showNotification('Никнейм занят', 'error');
-                            return;
-                        }
-
-                        const response = await fetch(
-                            'https://helpertool2.teawithsuqar.workers.dev/register',
-                            {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(formData)
-                            }
-                        );
-
-                        if (!response.ok) {
-                            const error = await response.json();
-                            showNotification(error.error, 'error');
-                            return;
-                        }
-
-                        showNotification('Регистрация успешна!', 'success');
-                        document.querySelector('.auth-form').reset();
-
+        
                     } catch (error) {
                         showNotification('Ошибка соединения', 'error');
                         console.error(error);
@@ -269,6 +224,7 @@ function updateHeader(nickname, role) {
                 });
             }
         }
+        
         if (document.getElementById('kurator-select')) {
             const select = document.getElementById('kurator-select');
             const form = document.querySelector('form');
