@@ -207,22 +207,30 @@ body {
         padding: 2rem;
     }
     .dropbtn {
-        padding: 0.15rem 0.25rem!important;
-        font-size: 0.8rem!important;
+        padding: 0.5rem 1rem!important;
+        font-size: 0.9rem!important; 
     }
-
-    .dropdown-content { 
-        min-width:20px!important;
-        left: 0!important;
-        right: 0!important; 
+    .dropdown-content {
+        min-width: 90px!important;
+        left: 50%!important; 
+        transform: translateX(-50%); 
+        text-align: center!important;
+         border-radius: 0.8rem!important;
     }
 
     .dropdown-content a {
         padding: 8px 12px!important; 
-        font-size: 0.6rem!important; 
-        left: 0!important;
-        right: 0!important;
+        font-size: 0.8rem!important;
+         border-radius: 0.8rem!important;
     }
+    .dropdown-content a:last-child {
+        border-bottom: none;
+    }
+
+    .dropdown-content {
+        animation: slideDown 0.3s ease-out;
+    }
+
     #downloadBtn
     {
         padding: 0.4rem 0.8rem!important;
@@ -382,6 +390,11 @@ select.form-input option {
     box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
 }
 
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
 .dropbtn {
     background-color: rgba(104, 0, 145, 0.7);
     color: white;
@@ -402,11 +415,6 @@ select.form-input option {
     box-shadow: 0 4px 15px rgba(104, 0, 145, 0.4);
 }
 
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
 .dropdown-content {
     display: none;
     position: absolute;
@@ -414,9 +422,10 @@ select.form-input option {
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 1;
-    right: 0;
-    left: 0;
     border-radius: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
 }
 
 .dropdown-content a {
