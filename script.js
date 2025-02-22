@@ -114,8 +114,7 @@ function updateHeader(nickname, role) {
     }
 
     if (role) {
-        buttonText = `${nickname} (${role})`;
-        dropdownContent = `<a href="#">Роль: ${role}</a>` + dropdownContent;
+        buttonText = `${nickname}`;
     }
 
     navLinks.innerHTML = `
