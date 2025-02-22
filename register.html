@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelperTool</title>
+    <link rel="icon" type="image/x-icon" href="icon.ico">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+<div class="preloader">
+    <div class="pixel-spinner"></div>
+  </div>
+    <header class="main-header">
+        <a href="index.html" class="logo glitch" data-text="HelperTool">HelperTool</a>
+        <nav class="nav-links">
+            <a href="register.html" class="nav-btn">Регистрация</a>
+            <a href="login.html" class="nav-btn">Войти</a>
+        </nav>
+    </header>
+
+    <div class="auth-container">
+        <form class="auth-form">
+            <h2 class="form-title">Регистрация</h2>
+            <input type="text" id="nickname" placeholder="Никнейм" class="form-input">
+            <input type="password" id="password" placeholder="Пароль" class="form-input">
+            <select class="form-input" id="kurator-select" required>
+                <option value="" disabled selected hidden>Выбери своего куратора</option>
+            </select>
+            
+            <input type="text" id="telegramId" placeholder="Цифры от бота" class="form-input">
+            
+            <div class="code-input-group" style="margin-top: 1rem;">
+                <input type="text" id="code" placeholder="Код подтверждения" class="form-input">
+                <button type="button" class="code-btn">Получить код</button>
+            </div>
+            <button type="submit" class="form-btn">Зарегистрироваться</button>
+            <p class="bot-info">Получить цифры от <a href="https://t.me/CristalixTeaBot" target="_blank" class="bot-link">бота</a></p>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
